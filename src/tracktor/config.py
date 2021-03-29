@@ -17,7 +17,8 @@ cfg = __C
 __C.ROOT_DIR = osp.abspath(osp.join(osp.dirname(__file__), '..', '..'))
 
 # Data directory
-__C.DATA_DIR = osp.abspath(osp.join(__C.ROOT_DIR, 'data'))
+# __C.DATA_DIR = osp.abspath(osp.join(__C.ROOT_DIR, 'data'))
+__C.DATA_DIR = "/"
 
 def get_output_dir(module):
   """Return the directory where experimental artifacts are placed.
