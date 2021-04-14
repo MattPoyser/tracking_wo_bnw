@@ -5,12 +5,20 @@ from .marcuhmot import MarCUHMOT
 from .mot15_wrapper import MOT15Wrapper
 from .mot_reid_wrapper import MOTreIDWrapper
 from .mot_wrapper import (MOT17LOWFPSWrapper, MOT17PrivateWrapper,
-                          MOT17Wrapper, MOT19Wrapper, MOT20Wrapper)
+                          MOT17Wrapper, MOT19Wrapper, MOT20Wrapper, MavvidWrapper)
 
 _sets = {}
 
 
 # Fill all available datasets, change here to modify / add new datasets.
+# for split in ['train', 'test', 'all']:
+for split in ['test']:
+    # for dets in ['DPM16', 'DPM', 'FRCNN', 'SDP', 'ALL']:
+    for dets in ['FRCNN']:
+        name = f'mavvid_{split}_{dets}'
+        _sets[name] = (lambda *args, split=split,
+                       dets=dets: MavvidWrapper(split, dets, *args))
+
 for split in ['train', 'test', 'all', '01', '02', '03', '04', '05', '06', '07', '08', '09',
               '10', '11', '12', '13', '14']:
     for dets in ['DPM16', 'DPM', 'FRCNN', 'SDP', 'ALL']:
