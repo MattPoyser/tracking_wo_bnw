@@ -12,7 +12,7 @@ _sets = {}
 
 # Fill all available datasets, change here to modify / add new datasets.
 # for split in ['train', 'test', 'all']:
-for split in ['test']:
+for split in ['train','test']:
     # for dets in ['DPM16', 'DPM', 'FRCNN', 'SDP', 'ALL']:
     for dets in ['FRCNN']:
         name = f'mavvid_{split}_{dets}'
