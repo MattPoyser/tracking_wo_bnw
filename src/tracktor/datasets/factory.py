@@ -42,7 +42,7 @@ for split in ['1', '2', '3', '5', '6', '10', '15', '30']:
     _sets[name] = (lambda *args, split=split: MOT17LOWFPSWrapper(split, *args))
 
 # for split in ['train', 'small_val', 'small_train']:
-for split in ['train', '02', '04', '05', '09', '10', '11','13',]:
+for split in ['train', 'test', '02', '04', '05', '09', '10', '11','13',]:
     name = f'mot_reid_{split}'
     _sets[name] = (lambda *args, split=split: MOTreIDWrapper(split, *args))
 
