@@ -7,7 +7,7 @@ db_train:
   split: mot_reid_train
   mot_dir: mavvid/mot17
 db_val:
-  split: None
+  split: mot_reid_test
   mot_dir: mavvid/mot17
 
 model_args:
