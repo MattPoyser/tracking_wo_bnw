@@ -106,9 +106,9 @@ class MOTreID(MOTSequence):
         # sample max_per_person images and filter out tracks smaller than 4 samples
         #outdir = get_output_dir("siamese_test")
         res = []
-        raise AttributeError(len(list(tracks.items())))
         for k,v in tracks.items():
             l = len(v)
+            raise AttributeError(k,v)
             if l >= self.K:
                 pers = []
                 if l > self.max_per_person:
