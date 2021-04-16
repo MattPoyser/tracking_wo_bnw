@@ -108,7 +108,7 @@ class MOTreID(MOTSequence):
         res = []
         for k,v in tracks.items():
             l = len(v)
-            raise AttributeError(k,v)
+            raise AttributeError(k,v, self.K, len(v))
             if l >= self.K:
                 pers = []
                 if l > self.max_per_person:
