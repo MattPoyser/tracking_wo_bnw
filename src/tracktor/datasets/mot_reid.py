@@ -113,7 +113,11 @@ class MOTreID(MOTSequence):
                 pers = []
                 if l > self.max_per_person:
                     for i in np.random.choice(l, self.max_per_person, replace=False):
-                        pers.append(self.build_crop(v[i]['im_path'], v[i]['gt']))
+                        try:
+                            pers.append(self.build_crop(v[i]['im_path'], v[i]['gt']))
+                        except cv2.error:
+                            print(v[i]['im_path'])
+                            continue
                 else:
                     for i in range(l):
                         pers.append(self.build_crop(v[i]['im_path'], v[i]['gt']))
@@ -142,8 +146,17 @@ class MOTreID(MOTSequence):
         gt[2] = np.clip(gt[2]+context*w, 0, width-1)
         gt[3] = np.clip(gt[3]+context*h, 0, height-1)
 
+        # assume doesn't hit edge of image
+        if w == 0:
+            gt[2] += 2
+        if h == 0:
+            gt[3] += 2
         im = im[int(gt[1]):int(gt[3]), int(gt[0]):int(gt[2])]
 
-        im = cv2.resize(im, (int(self.crop_W*1.125), int(self.crop_H*1.125)), interpolation=cv2.INTER_LINEAR)
+        try:
+            im = cv2.resize(im, (int(self.crop_W*1.125), int(self.crop_H*1.125)), interpolation=cv2.INTER_LINEAR)
+        except cv2.error:
+            print(im, im_path)
+            raise cv2.error()
 
         return im
