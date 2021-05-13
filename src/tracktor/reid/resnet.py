@@ -184,7 +184,10 @@ class ReIDNetwork(ResNet):
             mask_anchor_positive = _get_anchor_positive_triplet_mask(labels).float()
             mask_anchor_negative = _get_anchor_negative_triplet_mask(labels).float()
 
-            pos_dist = dist * mask_anchor_positive
+            try:
+                pos_dist = dist * mask_anchor_positive
+            except RuntimeError as e:
+                raise AttributeError(e)
             # here add value so that not valid values can not be picked
             max_val = torch.max(dist)
             neg_dist = dist + max_val * (1.0 - mask_anchor_negative)

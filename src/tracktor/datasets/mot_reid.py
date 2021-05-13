@@ -10,6 +10,7 @@ from torchvision.transforms import (CenterCrop, Compose, Normalize, RandomCrop,
 
 from ..config import get_output_dir
 from .mot_sequence import MOTSequence
+import random
 
 
 class MOTreID(MOTSequence):
@@ -31,6 +32,11 @@ class MOTreID(MOTSequence):
         self.crop_H = crop_H
         self.crop_W = crop_W
         self.logger = logger
+        # self.normalize_mean, self.normalize_std = normalize_mean, normalize_std
+
+        self.neg_crop_transform = Compose([
+            RandomCrop((288, 144)),
+            RandomHorizontalFlip()])
 
         if transform == "random":
             self.transform = Compose([
@@ -46,7 +52,8 @@ class MOTreID(MOTSequence):
         else:
             raise NotImplementedError("Tranformation not understood: {}".format(transform))
 
-        self.data = self.build_samples()
+        # self.data = self.build_samples()
+        self.data, self.neg_samples = self.build_samples()
 
     def __getitem__(self, idx):
         """Return the ith triplet"""
@@ -57,13 +64,25 @@ class MOTreID(MOTSequence):
         res.append(pos[np.random.choice(pos.shape[0], self.K, replace=False)])
 
         # exclude idx here
-        neg_indices = np.random.choice([
-            i for i in range(len(self.data))
-            if i != idx], self.P-1, replace=False)
-        for i in neg_indices:
-            neg = self.data[i]
-            res.append(neg[np.random.choice(neg.shape[0], self.K, replace=False)])
-
+        random_sampled = False
+        try:
+            neg_indices = np.random.choice([
+                i for i in range(len(self.data))
+                if i != idx], self.P-1, replace=False)
+            for i in neg_indices:
+                neg = self.data[i]
+                res.append(neg[np.random.choice(neg.shape[0], self.K, replace=False)])
+        except (IndexError, ValueError): # <=1 sample -> no neg sample -> generate random non overlapping sample as negative
+            # neg_indices = np.random.choice([
+            #     i for i in range(len(self.neg_samples))], self.P-1, replace=False)
+            # for i in neg_indices:
+            #     neg = self.neg_samples[i]
+            #     res.append(neg[np.random.choice(neg.shape[0], self.K, replace=False)])
+            idx_to_sample = [i for i in range(len(self.neg_samples))]
+            num_to_sample = res[0].shape[0]
+            neg_indices = random.sample(idx_to_sample, num_to_sample)
+            res.append(np.array([self.neg_samples[i] for i in neg_indices])) # use as many negative samples as we have positive samples
+            random_sampled = True
         # concatenate the results
         r = []
         for pers in res:
@@ -76,8 +95,11 @@ class MOTreID(MOTSequence):
         # construct the labels
         labels = [idx] * self.K
 
-        for l in neg_indices:
-            labels += [l] * self.K
+        if not random_sampled: # normaly way
+            for l in neg_indices:
+                labels += [l] * self.K
+        else:
+            labels += [0] * self.K  # TODO does 0 == None class?
 
         labels = np.array(labels)
 
@@ -106,6 +128,7 @@ class MOTreID(MOTSequence):
         # sample max_per_person images and filter out tracks smaller than 4 samples
         #outdir = get_output_dir("siamese_test")
         res = []
+        neg_samples = []
         for k,v in tracks.items():
             l = len(v)
             # raise AttributeError(k,v, self.K, len(v))
@@ -115,21 +138,27 @@ class MOTreID(MOTSequence):
                     for i in np.random.choice(l, self.max_per_person, replace=False):
                         try:
                             pers.append(self.build_crop(v[i]['im_path'], v[i]['gt']))
+                            if len(neg_samples) < self.P:
+                                neg_samples.append(np.array(self.neg_crop_transform(Image.fromarray(cv2.imread(v[i]['im_path'])))))
                         except cv2.error:
                             print(v[i]['im_path'])
                             continue
                 else:
                     for i in range(l):
                         pers.append(self.build_crop(v[i]['im_path'], v[i]['gt']))
+                        if len(neg_samples) < self.P:
+                            neg_samples.append(np.array(self.neg_crop_transform(Image.fromarray(cv2.imread(v[i]['im_path'])))))
 
                 #for i,v in enumerate(pers):
                 #	cv2.imwrite(osp.join(outdir, str(k)+'_'+str(i)+'.png'),v)
                 res.append(np.array(pers))
 
+
         if self._seq_name:
             self.logger(f"[*] Loaded {len(res)} persons from sequence {self._seq_name}.")
 
-        return res
+        # return res
+        return res, neg_samples
 
     def build_crop(self, im_path, gt):
         im = cv2.imread(im_path)
