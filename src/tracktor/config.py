@@ -18,7 +18,8 @@ __C.ROOT_DIR = osp.abspath(osp.join(osp.dirname(__file__), '..', '..'))
 
 # Data directory
 # __C.DATA_DIR = osp.abspath(osp.join(__C.ROOT_DIR, 'data'))
-__C.DATA_DIR = "/hdd/PhD/drone/"
+# __C.DATA_DIR = "/hdd/PhD/drone/"
+__C.DATA_DIR = "/home2/lgfm95/drone/reiddata/"
 # __C.DATA_DIR = "/data/drones/"
 
 def get_output_dir(module):
